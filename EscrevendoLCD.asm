@@ -8,13 +8,17 @@ org 0000h
 
 org 0030h
 ; put data in ROM
-FEI:
+AGUA:
 	DB "1-AGUA"
 	DB 00h ;Marca null no fim da String
+ORG 0040H
 COCA:
   DB "2-COCA"
   DB 00h ;Marca null no fim da String
-
+ORG 0050H
+GUARANA:
+	DB "5-GUARANA"
+	DB 00H
 ;MAIN
 org 0100h
 TECLAS_TECLADO_MATRICIAL:
@@ -30,6 +34,8 @@ TECLAS_TECLADO_MATRICIAL:
 	MOV 49H, #'3'
 	MOV 4AH, #'2'
 	MOV 4BH, #'1'
+
+	RET
 
 LER_LINHAS:
 	MOV R0, #0			; clear R0 - the first key is key0
@@ -75,34 +81,46 @@ TECLA:
 	RET					; and return from subroutine
 
 
+
 START:
+
 
 main:
 	ACALL lcd_init
 	MOV A, #00h
 	ACALL posicionaCursor
-	MOV DPTR,#FEI            ;endereço inicial de memória da String FEI
+	MOV DPTR,#AGUA;endereço inicial de memória da String FEI
 	ACALL escreveStringROM
 	MOV A, #40h
   ACALL posicionaCursor
-	MOV DPTR,#COCA            ;endereço inicial de memória da String Display LCD
+	MOV DPTR,#COCA;endereço inicial de memória da String Display LCD
   ACALL escreveStringROM
-	;ACALL clearDisplay
-ROTINA:
-	ACALL LER_LINHAS
-	JNB F0, ROTINA
-	MOV A , #07H
-	ACALL posicionaCursor
-	MOV A, #40h
-	ADD A, R0
-	MOV R0, A
-	MOV A, @R0        
-	ACALL sendCharacter
-	CLR F0
-	JMP ROTINA
-	
-	JMP main
+	JMP SUBIDA
+SUBIDA:
+    ACALL TECLAS_TECLADO_MATRICIAL
+    ACALL LER_LINHAS
+    JNB F0, SUBIDA;SE NÃO TIVER NENHUM BOTÃO VOLTA PARA SUBIDA
+    MOV A, P0 
+    ANL A, #41H ;OPERAÇÃO AND
+;ENTRE O A E O VALOR 41
+;QUE EM BINARIO É 01000001
+;COMO A PORTA AND 0 É SEMPRE 0
+;ENTÃO CONSEGUIMOS DETERMINAR QUANDO
+;O BOTÃO * ESTA SENDO PRESSIONADO!
+    JZ TESTE ;SE FOR 0
+    JMP SUBIDA
 
+TESTE:
+	ACALL clearDisplay
+	MOV A, #00H
+	ACALL posicionaCursor
+	MOV DPTR, #GUARANA
+	ACALL escreveStringROM
+	MOV A , #40H
+	ACALL posicionaCursor
+	MOV DPTR,#AGUA
+	ACALL escreveStringROM
+	JMP SUBIDA
 
 escreveStringROM:
   MOV R1, #00h
