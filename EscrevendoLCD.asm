@@ -15,15 +15,25 @@ ORG 0040H
 COCA:
   DB "2-COCA"
   DB 00h ;Marca null no fim da String
-ORG 0050H
-GUARANA:
-	DB "5-GUARANA"
-	DB 00H
-;MAIN
 
+org 0050h
 SODA:
 	DB "3-SODA"
 	DB 00H
+
+ORG 0060H
+FANTA:
+	DB "4-FANTA"
+	DB 00H
+
+
+ORG 0070H
+GUARANA:
+	DB "5-GUARANA"
+	DB 00H
+
+
+;MAIN
 org 0100h
 TECLAS_TECLADO_MATRICIAL:
 	MOV 40H, #'#' 
@@ -128,6 +138,10 @@ TESTE2:
 	ACALL posicionaCursor
 	MOV DPTR, #SODA
 	ACALL escreveStringROM
+  MOV A , #40H
+	ACALL posicionaCursor
+  MOV DPTR,#FANTA
+  ACALL escreveStringROM
 	JMP SUBIDA
 
 
