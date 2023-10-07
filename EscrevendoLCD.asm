@@ -98,8 +98,10 @@
   
   START:
   
-  MOV R2,#0H
   main:
+    MOV R2,#0H
+    MOV R3,#0H
+    ACALL clearDisplay
   	ACALL lcd_init
   	MOV A, #00h
   	ACALL posicionaCursor
@@ -112,6 +114,7 @@
   	JMP SUBIDA
   SUBIDA:
   	JNB P0.4, DESCIDA ;pino de funcionamento do #
+    JNB P0.6, SUBIDA2 ;pino de funcionamento do * 
      ACALL TECLAS_TECLADO_MATRICIAL
      ACALL LER_LINHAS
      JNB F0, SUBIDA;SE NÃO TIVER NENHUM BOTÃO VOLTA PARA SUBIDA
@@ -122,8 +125,19 @@
   ;COMO A PORTA AND 0 É SEMPRE 0
   ;ENTÃO CONSEGUIMOS DETERMINAR QUANDO
   ;O BOTÃO * ESTA SENDO PRESSIONADO!
-     JZ TESTE ;SE FOR 0
      JMP SUBIDA
+
+SUBIDA2:
+  	ACALL LER_LINHAS
+  	JNB F0,DESCIDA
+  	MOV A, P0
+  	ANL A, #11H
+    MOV A,R3
+    JZ MAIN ; ENTRA SE FOR 0
+    JNZ TESTE2 ;ENTRA SE FOR DIFERENTE DE 0
+  	JMP DESCIDA
+
+     
   DESCIDA:
   	ACALL LER_LINHAS
   	JNB F0,DESCIDA
@@ -131,16 +145,9 @@
   	ANL A, #11H
     MOV A,R2
     JZ TESTE2
-    JNZ TESTE3
+    JNZ TESTE
   	JMP DESCIDA
 
-  TESTE3:
-    ACALL clearDisplay
-  	MOV A , #00H
-  	ACALL posicionaCursor
-  	MOV DPTR, #GUARANA
-  	ACALL escreveStringROM
-    JMP SUBIDA
   TESTE2:
     
   	ACALL clearDisplay
@@ -153,6 +160,7 @@
     MOV DPTR,#FANTA
     ACALL escreveStringROM
     MOV R2,#1H
+    MOV R3,#0H
   	JMP SUBIDA
   
   
@@ -161,10 +169,7 @@
   	MOV A, #00H
   	ACALL posicionaCursor
   	MOV DPTR, #GUARANA
-  	ACALL escreveStringROM
-  	MOV A , #40H
-  	ACALL posicionaCursor
-  	MOV DPTR,#AGUA
+    MOV R3, #1H
   	ACALL escreveStringROM
   	JMP SUBIDA
   
