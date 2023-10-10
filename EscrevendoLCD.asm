@@ -1,4 +1,4 @@
-  ; --- Mapeamento de Hardware (8051) ---
+; --- Mapeamento de Hardware (8051) ---
       RS      equ     P1.3    ;Reg Select ligado em P1.3
       EN      equ     P1.2    ;Enable ligado em P1.2
   
@@ -34,23 +34,7 @@
   
   
   ;MAIN
-  org 0100h
-  TECLAS_TECLADO_MATRICIAL:
-  	MOV 40H, #'#' 
-  	MOV 41H, #'0'
-  	MOV 42H, #'*'
-  	MOV 43H, #'9'
-  	MOV 44H, #'8'
-  	MOV 45H, #'7'
-  	MOV 46H, #'6'
-  	MOV 47H, #'5'
-  	MOV 48H, #'4'
-  	MOV 49H, #'3'
-  	MOV 4AH, #'2'
-  	MOV 4BH, #'1'
-  
-  	RET
-  
+  org 0100h  
   LER_LINHAS:
   	MOV R0, #0			; clear R0 - the first key is key0
   
@@ -99,11 +83,12 @@
   START:
   
   main:
-    MOV R2,#0H
-    MOV R3,#0H
-    ACALL clearDisplay
-  	ACALL lcd_init
-  	MOV A, #00h
+  ;zera os registradores
+   MOV R2,#0H
+   MOV R3,#0H
+	ACALL lcd_init ;iniciar o display
+  ACALL clearDisplay ;limpar o display
+  	MOV A, #00h;move para a primeira posição de cima do display 
   	ACALL posicionaCursor
   	MOV DPTR,#AGUA;endereço inicial de memória da String FEI
   	ACALL escreveStringROM
@@ -111,45 +96,33 @@
     ACALL posicionaCursor
   	MOV DPTR,#COCA;endereço inicial de memória da String Display LCD
     ACALL escreveStringROM
-  	JMP SUBIDA
-  SUBIDA:
-  	JNB P0.4, DESCIDA ;pino de funcionamento do #
-    JNB P0.6, SUBIDA2 ;pino de funcionamento do * 
-     ACALL TECLAS_TECLADO_MATRICIAL
+  	JMP CONTROLADOR 
+  CONTROLADOR:
+  	 JNB P0.4, DESCIDA ;se o pino da coluna P0.4 for pressionado  (#) , DESVIA
+     JNB P0.6, SUBIDA ;se o pino da coluna P0.6 for pressionado (*), DESVIA
      ACALL LER_LINHAS
-     JNB F0, SUBIDA;SE NÃO TIVER NENHUM BOTÃO VOLTA PARA SUBIDA
-     MOV A, P0 
-     ANL A, #41H ;OPERAÇÃO AND
-  ;ENTRE O A E O VALOR 41
-  ;QUE EM BINARIO É 01000001
-  ;COMO A PORTA AND 0 É SEMPRE 0
-  ;ENTÃO CONSEGUIMOS DETERMINAR QUANDO
-  ;O BOTÃO * ESTA SENDO PRESSIONADO!
-     JMP SUBIDA
+     JMP CONTROLADOR; se nenhum dos botões forem pressionados
 
-SUBIDA2:
+SUBIDA:
   	ACALL LER_LINHAS
-  	JNB F0,DESCIDA
   	MOV A, P0
-  	ANL A, #11H
-    MOV A,R3
-    JZ MAIN ; ENTRA SE FOR 0
-    JNZ TESTE2 ;ENTRA SE FOR DIFERENTE DE 0
-  	JMP DESCIDA
+  	ANL A, #11H ;logica para ver se o botão * é pressionado
+  	MOV A,R3 ;REGISTRADOR DE CONTROLE DA SUBIDA
+	  JZ MAIN ; ENTRA SE FOR 0
+	  JNZ DISPLAYSODAFANTA ;ENTRA SE FOR DIFERENTE DE 0
 
      
   DESCIDA:
   	ACALL LER_LINHAS
-  	JNB F0,DESCIDA
   	MOV A, P0
-  	ANL A, #11H
-    MOV A,R2
-    JZ TESTE2
-    JNZ TESTE
-  	JMP DESCIDA
+  	ANL A, #41H
+  	MOV A,R2 ; REGISTRADOR DE CONTROLE DA DECIDA
+  	JZ DISPLAYSODAFANTA;entra se for 0
+  	JNZ DISPLAYGUARANA;entra se não for 0
+  	
 
-  TESTE2:
-    
+  DISPLAYSODAFANTA:
+    ;mostrar no display as opções soda e fanta
   	ACALL clearDisplay
   	MOV A , #00H
   	ACALL posicionaCursor
@@ -159,19 +132,20 @@ SUBIDA2:
   	ACALL posicionaCursor
     MOV DPTR,#FANTA
     ACALL escreveStringROM
-    MOV R2,#1H
-    MOV R3,#0H
-  	JMP SUBIDA
+    MOV R2,#1H ; REGISTRADOR DE CONTROLE DA DECIDA/SUBIDA
+    MOV R3,#0H ; REGISTRADOR DE CONTROLE DA SUBIDA/SUBIDA
+  	JMP CONTROLADOR
   
   
-  TESTE:
+  DISPLAYGUARANA:
+  ;mostrar no display a ultima opção guarana
   	ACALL clearDisplay
   	MOV A, #00H
   	ACALL posicionaCursor
   	MOV DPTR, #GUARANA
-    MOV R3, #1H
+    MOV R3, #1H ; REGISTRADOR DE CONTROLE DA SUBIDA/DECIDA
   	ACALL escreveStringROM
-  	JMP SUBIDA
+  	JMP CONTROLADOR
   
   escreveStringROM:
     MOV R1, #00h
