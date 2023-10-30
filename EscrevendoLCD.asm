@@ -6,7 +6,7 @@
 org 0000h
   LJMP START
 
-
+;Alocando os Textos na memória
 ORG 0010H
 TERMINADO:
   DB "RETIRE A BEBIDA"
@@ -94,32 +94,32 @@ TECLA:
   RET					; and return from subroutine
 
 
-
+;começo do programa
 START:
-  MOV R2,#0H
+  MOV R2,#0H ;coloco os registradores que serão utilizados para controle dos display para 0
   MOV R3,#0H
   MOV R7,#0H
   ACALL lcd_init
-  JMP DISPLAY1
+  JMP DISPLAY1 ; chamo o display 1
 
 DISPLAY1:
   ;CONTROLES DE SUBIDA E DECIDA
-  ACALL clearDisplay
+  ACALL clearDisplay;limpo o display
   MOV R2,#0H ;->CONTROLADOR PARA O DISPLAY1
-  MOV R3,#0H
-  MOV A, #00h
+  MOV R3,#0H;->CONTROLADOR PARA O DISPLAY1
+  MOV A, #00h; posiciono o cursor na primeira linha do display
   ACALL posicionaCursor
   MOV DPTR,#AGUA;endereço inicial de memória da agua
-  ACALL escreveStringROM
-  MOV A, #40h
+  ACALL escreveStringROM ; escrevo
+  MOV A, #40h; posiciono novamente
   ACALL posicionaCursor
   MOV DPTR,#COCA;endereço inicial de memória da String Display LCD
   ACALL escreveStringROM
-  JMP CONTROLLER
+  JMP CONTROLLER; chamo o controller que é onde fara a verificação de qual tecla foi pressionada!
 
-DISPLAY2:
+DISPLAY2:; segundo Display, ao pressionar a tecla de subida ou descida eu seto os registradores para a posição do display
   MOV R2,#1H
-  MOV R3,#0H;
+  MOV R3,#0H
   ACALL clearDisplay
   MOV A , #00H
   ACALL posicionaCursor
@@ -129,9 +129,9 @@ DISPLAY2:
   ACALL posicionaCursor
   MOV DPTR, #FANTA
   ACALL escreveStringROM
-  JMP CONTROLLER
+  JMP CONTROLLER;chamo o controller que é onde fara a verificação de qual tecla foi pressionada!
 
-DISPLAY3:
+DISPLAY3: ; terceiro Display, ao pressionar a tecla de subida ou descida eu seto os registradores para a posição do display
   MOV R7,#21H
   MOV R2,#0H
   MOV R3,#1H
@@ -141,55 +141,55 @@ DISPLAY3:
   ACALL posicionaCursor
   MOV DPTR, #GUARANA
   ACALL escreveStringROM
-  JMP CONTROLLER
+  JMP CONTROLLER;chamo o controller que é onde fara a verificação de qual tecla foi pressionada!
 
-DESCIDA: ;CERTO(NÃO MEXER)
+DESCIDA:; lógica ao pressionar a tecla de Descida
   MOV A,R2
   MOV B,R3
 
   ;DISPLAY3->DISPLAY3
-  CJNE A,B ,DISPLAY3
+  CJNE A,B ,DISPLAY3; se o A for diferente do B vou para o Display 3
   ;DISPLAY1->DISPLAY2
-  JZ DISPLAY2
+  JZ DISPLAY2  ; Vai para o Display 2 se o A for 0
   ;DISPLAY2->DISPLAY3
-  JNZ DISPLAY1
+  JNZ DISPLAY1 ; Vai para o Display 1 se o A não for 0
 
-SUBIDA: 
+SUBIDA: ; lógica ao pressionar a tecla de Subida
   MOV A,R2
   MOV B,R3
-  JNZ DISPLAY1
-  CJNE A,B ,DISPLAY2
-  JZ DISPLAY3
+  JNZ DISPLAY1; Vai para o Display 1 se o A não for 0
+  CJNE A,B ,DISPLAY2 ; se o A for diferente do B vou para o Display 2
+  JZ DISPLAY3 ; Vai para o Display 3 se o A for 0
 
 
-CONTROLLER:
-  CLR F0
+CONTROLLER: ; controla todos os botões pressionados!
+  CLR F0; limpa para que um botão seje pressionado
   ACALL LEITURA_TECLADO
-  JNB F0, CONTROLLER   ;if F0 is clear, volta pro controller
-  JNB P0.4, COLUNA3
-  JNB P0.5,COLUNA2
-  JNB P0.6,COLUNA1
-  JMP CONTROLLER
+  JNB F0, CONTROLLER   ;Se um botão não for pressionado, volta pro controller
+  JNB P0.4, COLUNA3; Pino referente a coluna 3 (3 e #) se um botão dessa coluna for pessionado vai para a coluna 3
+  JNB P0.5,COLUNA2; Pino referente a coluna 2 (2 e 5) se um botão dessa coluna for pessionado vai para a coluna 3
+  JNB P0.6,COLUNA1; Pino referente a coluna 1 (1 e 4) se um botão dessa coluna for pessionado vai para a coluna 3
+  JMP CONTROLLER; se nada for pressionado
 
 
 COLUNA1:
   JNB P0.3 , CARREGANDO_AGUA ; ENTRAR NO 1
   JNB P0.2, CARREGANDO_FANTA ;ENTRA NO 4
   JNB P0.0, SUBIDA ;ENTRAR NO *
-  SJMP CONTROLLER
+  SJMP CONTROLLER; se não clicar nesses botões volta para o Controller!
 
 
 COLUNA2:
   JNB P0.3 , CARREGANDO_COCA ; ENTRAR NO 2
   JNB P0.2, CARREGANDO_GUARANA ;ENTRAR NO 5
-  SJMP CONTROLLER
+  SJMP CONTROLLER; se não clicar nesses botões volta para o Controller!
 
 COLUNA3:
   JNB P0.0 , DESCIDA ; ENTRAR NO #
   JNB P0.3, CARREGANDO_SODA;ENTRAR NO 3
-  SJMP CONTROLLER
+  SJMP CONTROLLER; se não clicar nesses botões volta para o Controller!
 
-CARREGANDO_AGUA:
+CARREGANDO_AGUA: ; escreve o Display referente a agua
   ACALL clearDisplay
   MOV A, #00H
   ACALL posicionaCursor
@@ -199,9 +199,9 @@ CARREGANDO_AGUA:
   ACALL posicionaCursor
   MOV DPTR, #AGUA
   ACALL escreveStringROM
-  ACALL PREPARO_GERAL
+  ACALL PREPARO_GERAL ; depois de escrver vai para o preparo geral!
 
-CARREGANDO_COCA:
+CARREGANDO_COCA:; escreve o Display referente a Coca
   ACALL clearDisplay
   MOV A, #00H
   ACALL posicionaCursor
@@ -211,9 +211,9 @@ CARREGANDO_COCA:
   ACALL posicionaCursor
   MOV DPTR, #COCA
   ACALL escreveStringROM
-  ACALL PREPARO_GERAL
+  ACALL PREPARO_GERAL ; depois de escrver vai para o preparo geral!
 
-CARREGANDO_SODA:
+CARREGANDO_SODA:; escreve o Display referente a Soda
   ACALL clearDisplay
   MOV A, #00H
   ACALL posicionaCursor
@@ -223,9 +223,10 @@ CARREGANDO_SODA:
   ACALL posicionaCursor
   MOV DPTR, #SODA
   ACALL escreveStringROM
-  ACALL PREPARO_GERAL
+  ACALL PREPARO_GERAL ; depois de escrver vai para o preparo geral!
 
-CARREGANDO_FANTA:
+
+CARREGANDO_FANTA:; escreve o Display referente a Fanta
   ACALL clearDisplay
   MOV A, #00H
   ACALL posicionaCursor
@@ -235,9 +236,10 @@ CARREGANDO_FANTA:
   ACALL posicionaCursor
   MOV DPTR, #FANTA
   ACALL escreveStringROM
-  ACALL PREPARO_GERAL
+  ACALL PREPARO_GERAL ; depois de escrver vai para o preparo geral!
 
-CARREGANDO_GUARANA:
+
+CARREGANDO_GUARANA:; escreve o Display referente ao Guaraná
   ACALL clearDisplay
   MOV A, #00H
   ACALL posicionaCursor
@@ -247,11 +249,12 @@ CARREGANDO_GUARANA:
   ACALL posicionaCursor
   MOV DPTR, #GUARANA
   ACALL escreveStringROM
-  ACALL PREPARO_GERAL
+  ACALL PREPARO_GERAL ; depois de escrver vai para o preparo geral!
 
 
-  PREPARO_GERAL:
-  ACALL clearDisplay
+
+  PREPARO_GERAL:; Nessa Sub-rotina vai escrver no display preparando e depois vai para a subrotina de Carregamento
+  ACALL clearDisplay 
   MOV A, #00H
   ACALL posicionaCursor
   MOV DPTR,#PREPARANDO
@@ -262,21 +265,21 @@ CARREGANDO_GUARANA:
   ACALL CARREGAMENTO
   JMP CONTROLLER
 
-CARREGAMENTO:
+CARREGAMENTO:; Nessa Subrotina será responsável por escrerver # na segunda linha do display, que é referente ao preparo da bebida
   MOV DPTR, #JOGO_VELHA
   ACALL escreveStringROM
   ACALL DELAY
   INC A
   DJNZ R4, CARREGAMENTO
-  JMP PREPARADO
+  JMP PREPARADO; ao acabar de escrver vai para essa Subrotina
 
-PREPARADO:
+PREPARADO:; responsavel por limpar o display e escrerver Retire a Sua Bebida, depois disso volta para o Menu principal para que possa pedir outra bebida
   ACALL clearDisplay
   MOV A, #00H
   ACALL posicionaCursor
   MOV DPTR,#TERMINADO
   ACALL escreveStringROM
-  JMP DISPLAY1
+  JMP DISPLAY1; Menu Principal
 
 escreveStringROM:
   MOV R1, #00h
